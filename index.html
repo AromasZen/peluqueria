@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peluquería Demo - Tu Estilo Perfecto</title>
+  <meta name="description" content="Encuentra tu corte de pelo ideal. Peluquería profesional con los mejores estilistas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <div class="navbar-logo">✂️ Peluquería <span>Demo</span></div>
+      <ul class="navbar-links">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+      </ul>
+      <button class="navbar-cta" id="navQuizBtn">Encuentra tu corte</button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="inicio">
+    <div class="hero-content">
+      <div class="hero-stars">
+        <span class="stars">★★★★★</span>
+        <span class="label">+500 clientes satisfechos</span>
+      </div>
+      <h1>Tu estilo,<br><span class="accent">nuestra pasión</span></h1>
+      <p class="hero-desc">Descubre el corte perfecto para ti con nuestro asistente inteligente. Profesionales dedicados a realzar tu mejor versión.</p>
+      <div class="hero-buttons">
+        <button class="btn-primary" id="heroQuizBtn">✨ Encuentra tu corte ideal</button>
+        <a href="#contacto" class="btn-outline">📞 Contáctanos</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== INFO BAR ===== -->
+  <section class="info-bar">
+    <div class="info-bar-inner">
+      <div class="info-item">
+        <div class="info-icon">📍</div>
+        <div>
+          <div class="info-label">Dirección</div>
+          <div class="info-value">Calle Ficticia 123</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">🕒</div>
+        <div>
+          <div class="info-label">Horarios</div>
+          <div class="info-value">Lunes a Sábado: 9:00 - 19:00</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📞</div>
+        <div>
+          <div class="info-label">Teléfono / WhatsApp</div>
+          <div class="info-value">1234-5678 / 999-9999</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICES ===== -->
+  <section class="section" id="servicios">
+    <div class="section-header">
+      <div class="section-tag">Nuestros Servicios</div>
+      <h2 class="section-title">Lo que <span class="accent">ofrecemos</span></h2>
+      <p class="section-desc">Servicios profesionales de peluquería con los mejores productos y técnicas del mercado.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">✂️</div>
+        <h3>Cortes de Cabello</h3>
+        <p>Cortes modernos y clásicos para todos los estilos</p>
+        <div class="service-price"></div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🎨</div>
+        <h3>Coloración</h3>
+        <p>Tintes, mechas, balayage y técnicas de color</p>
+        <div class="service-price"></div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💧</div>
+        <h3>Tratamientos Capilares</h3>
+        <p>Hidratación, keratina y reconstrucción capilar</p>
+        <div class="service-price"></div>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💨</div>
+        <h3>Peinados</h3>
+        <p>Peinados para eventos, bodas y ocasiones especiales</p>
+        <div class="service-price"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-section">
+    <div class="cta-icon">✨</div>
+    <h2>¿No sabes qué corte elegir?</h2>
+    <p>Nuestro asistente inteligente te ayuda a encontrar el corte perfecto según tu tipo de cara, cabello y preferencias personales.</p>
+    <button class="btn-primary" id="ctaQuizBtn">✨ Encuentra tu corte ideal</button>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="contacto">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="navbar-logo">✂️ Peluquería <span>Demo</span></div>
+        <p>Tu destino para un estilo impecable. Profesionales dedicados a realzar tu mejor versión con las últimas tendencias.</p>
+      </div>
+      <div>
+        <h3>Horarios</h3>
+        <ul class="footer-hours">
+          <li><span>Lunes - Viernes</span><span>9:00 - 19:00</span></li>
+          <li><span>Sábado</span><span>9:00 - 19:00</span></li>
+          <li><span>Domingo</span><span class="closed">Cerrado</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Contacto</h3>
+        <div class="footer-contact">
+          <a href="tel:12345678">📞 1234-5678</a>
+          <a href="https://wa.me/9999999" target="_blank" rel="noopener noreferrer">💬 WhatsApp: 999-9999</a>
+          <div>📍 Calle Ficticia 123</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Peluquería Demo. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- ===== QUIZ MODAL ===== -->
+  <div class="modal-overlay" id="quizModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal">
+      <button class="modal-close" id="modalClose">✕</button>
+
+      <!-- Quiz Steps -->
+      <div id="quizContent">
+        <div class="progress-bar" id="progressBar"></div>
+        <div class="quiz-step-label" id="stepLabel"></div>
+        <h2 class="quiz-title" id="quizTitle"></h2>
+        <p class="quiz-subtitle" id="quizSubtitle"></p>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="quiz-nav">
+          <button class="btn-ghost" id="prevBtn">← Anterior</button>
+          <button class="btn-primary small" id="nextBtn">Siguiente →</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsContent" class="hidden">
+        <div id="resultsInner"></div>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>
