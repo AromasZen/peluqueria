@@ -55,6 +55,13 @@ const steps = [
 let currentStep = 0;
 let selections = {};
 
+// ===== TRABAJOS STATE =====
+const TRABAJOS_PER_PAGE = 5;
+let trabajosCargados = [];
+let trabajosTotalCount = 0;
+let trabajosOffset = 0;
+let trabajosLoading = false;
+
 // ===== DOM ELEMENTS =====
 const quizModal = document.getElementById("quizModal");
 const modalBackdrop = document.getElementById("modalBackdrop");
@@ -97,7 +104,6 @@ function renderStep() {
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
 
-  // Progress bar
   progressBar.innerHTML = steps
     .map(
       (_, i) =>
@@ -105,12 +111,10 @@ function renderStep() {
     )
     .join("");
 
-  // Labels
   stepLabel.textContent = `✨ Paso ${currentStep + 1} de ${steps.length}`;
   quizTitle.textContent = step.title;
   quizSubtitle.textContent = step.subtitle;
 
-  // Options
   quizOptions.innerHTML = step.options
     .map(
       (opt) =>
@@ -123,7 +127,6 @@ function renderStep() {
     )
     .join("");
 
-  // Option click handlers
   quizOptions.querySelectorAll(".quiz-option").forEach((el) => {
     el.addEventListener("click", () => {
       selections[step.key] = el.dataset.value;
@@ -131,11 +134,9 @@ function renderStep() {
     });
   });
 
-  // Prev button
   prevBtn.disabled = currentStep === 0;
   prevBtn.style.opacity = currentStep === 0 ? "0.35" : "1";
 
-  // Next button
   const canProceed = !!selections[step.key];
   nextBtn.disabled = !canProceed;
   nextBtn.textContent = isLast ? "🔍 Buscar mi corte ideal" : "Siguiente →";
@@ -163,7 +164,6 @@ async function searchCortes() {
   quizContent.classList.add("hidden");
   resultsContent.classList.remove("hidden");
 
-  // Show loading
   resultsInner.innerHTML = `
     <div class="loading">
       <div class="spinner"></div>
@@ -234,28 +234,25 @@ function renderResults(cortes) {
   `;
 
   cortes.forEach((corte) => {
-  html += `
-    <div class="result-card">
-      <div class="result-img-wrapper">
-        <img src="${corte.imagen}" alt="${corte.nombre_corte}">
-        <span class="result-badge">${corte.genero}</span>
-      </div>
-
-      <div class="result-card-body">
-        <h4>${corte.nombre_corte}</h4>
-        <p class="desc">${corte.descripcion || ""}</p>
-
-        <div class="result-tags">
-          <span class="result-tag">${corte.tipo_cara}</span>
-          <span class="result-tag">${corte.tipo_pelo}</span>
-          <span class="result-tag">${corte.largo}</span>
+    html += `
+      <div class="result-card">
+        <div class="result-img-wrapper">
+          <img src="${corte.imagen}" alt="${corte.nombre_corte}">
+          <span class="result-badge">${corte.genero}</span>
         </div>
-
-        ${corte.precio ? `<div class="result-price">$${Number(corte.precio).toFixed(2)}</div>` : ""}
+        <div class="result-card-body">
+          <h4>${corte.nombre_corte}</h4>
+          <p class="desc">${corte.descripcion || ""}</p>
+          <div class="result-tags">
+            <span class="result-tag">${corte.tipo_cara}</span>
+            <span class="result-tag">${corte.tipo_pelo}</span>
+            <span class="result-tag">${corte.largo}</span>
+          </div>
+          ${corte.precio ? `<div class="result-price">$${Number(corte.precio).toFixed(2)}</div>` : ""}
+        </div>
       </div>
-    </div>
-  `;
-});
+    `;
+  });
 
   html += `</div>`;
   resultsInner.innerHTML = html;
@@ -270,5 +267,229 @@ function resetQuiz() {
   renderStep();
 }
 
+// ===== TRABAJOS: LOAD FROM SUPABASE =====
+async function cargarTrabajos(reset) {
+  if (trabajosLoading) return;
+  trabajosLoading = true;
+
+  const loadingEl = document.getElementById("trabajosLoading");
+  const emptyEl = document.getElementById("trabajosEmpty");
+  const gridEl = document.getElementById("trabajosGrid");
+  const loadMoreEl = document.getElementById("trabajosLoadMore");
+  const btnSpinner = document.getElementById("btnVerMasSpinner");
+  const btnText = document.querySelector(".btn-load-more-text");
+  const countEl = document.getElementById("trabajosCount");
+
+  if (reset) {
+    trabajosCargados = [];
+    trabajosOffset = 0;
+    gridEl.innerHTML = "";
+    gridEl.classList.add("hidden");
+    loadMoreEl.classList.add("hidden");
+    emptyEl.classList.add("hidden");
+    loadingEl.classList.remove("hidden");
+  } else {
+    // Show spinner on button
+    btnSpinner.classList.remove("hidden");
+    btnText.textContent = "Cargando...";
+  }
+
+  try {
+    // First get total count
+    if (reset) {
+      const { count, error: countError } = await supabaseClient
+     .from("trabajos")
+     .select("*", { count: "exact", head: true })
+     .eq("empresa_id", empresaId);
+
+      if (countError) {
+        console.error("Error contando trabajos:", countError);
+        trabajosTotalCount = 0;
+      } else {
+        trabajosTotalCount = count || 0;
+      }
+    }
+
+    // Fetch the next batch
+    const { data, error } = await supabaseClient
+  .from("trabajos")
+  .select("*")
+  .eq("empresa_id", empresaId)
+  .order("created_at", { ascending: false })
+  .range(trabajosOffset, trabajosOffset + TRABAJOS_PER_PAGE - 1);
+
+    if (error) {
+      console.error("Error cargando trabajos:", error);
+      loadingEl.classList.add("hidden");
+      emptyEl.innerHTML = `
+        <div class="trabajos-empty-icon">⚠️</div>
+        <h4>Error al cargar trabajos</h4>
+        <p>No se pudieron cargar los trabajos. Intenta recargar la página.</p>
+      `;
+      emptyEl.classList.remove("hidden");
+      trabajosLoading = false;
+      return;
+    }
+
+    loadingEl.classList.add("hidden");
+
+    if ((!data || data.length === 0) && trabajosCargados.length === 0) {
+      emptyEl.classList.remove("hidden");
+      trabajosLoading = false;
+      return;
+    }
+
+    if (data && data.length > 0) {
+      trabajosCargados = trabajosCargados.concat(data);
+      trabajosOffset += data.length;
+
+      // Render new cards with animation
+      data.forEach((trabajo, index) => {
+        const card = crearTarjetaTrabajo(trabajo, index);
+        gridEl.appendChild(card);
+      });
+
+      gridEl.classList.remove("hidden");
+
+      // Animate new cards
+      requestAnimationFrame(() => {
+        const newCards = gridEl.querySelectorAll(".trabajo-card.entering");
+        newCards.forEach((card, i) => {
+          setTimeout(() => {
+            card.classList.remove("entering");
+            card.classList.add("entered");
+          }, i * 100);
+        });
+      });
+
+      // Update count text
+      countEl.textContent = `Mostrando ${trabajosCargados.length} de ${trabajosTotalCount} trabajos`;
+
+      // Show/hide load more button
+      if (trabajosCargados.length < trabajosTotalCount) {
+        loadMoreEl.classList.remove("hidden");
+      } else {
+        loadMoreEl.classList.add("hidden");
+      }
+    } else {
+      // No more data to load
+      loadMoreEl.classList.add("hidden");
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    loadingEl.classList.add("hidden");
+  }
+
+  // Reset button state
+  btnSpinner.classList.add("hidden");
+  btnText.textContent = "Ver más trabajos";
+  trabajosLoading = false;
+}
+
+// ===== CREATE TRABAJO CARD =====
+function crearTarjetaTrabajo(trabajo, index) {
+  const card = document.createElement("div");
+  card.className = "trabajo-card entering";
+  card.style.animationDelay = `${index * 0.1}s`;
+
+  const fecha = trabajo.created_at
+    ? new Date(trabajo.created_at).toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
+
+  card.innerHTML = `
+    <div class="trabajo-img-wrapper" onclick="abrirLightbox('${trabajo.imagen_url || ""}', '${(trabajo.titulo || "").replace(/'/g, "\\'")}')">
+      <img
+        src="${trabajo.imagen_url || ""}"
+        alt="${trabajo.titulo || "Trabajo"}"
+        loading="lazy"
+        onerror="this.parentElement.classList.add('img-error'); this.style.display='none';"
+      >
+      <div class="trabajo-img-overlay">
+        <span class="trabajo-zoom-icon">🔍</span>
+      </div>
+    </div>
+    <div class="trabajo-card-body">
+      <h4 class="trabajo-titulo">${trabajo.titulo || "Sin título"}</h4>
+      ${fecha ? `<span class="trabajo-fecha">📅 ${fecha}</span>` : ""}
+    </div>
+  `;
+
+  return card;
+}
+
+// ===== LIGHTBOX =====
+function abrirLightbox(imagenUrl, titulo) {
+  if (!imagenUrl) return;
+
+  const overlay = document.getElementById("lightboxModal");
+  const img = document.getElementById("lightboxImage");
+  const caption = document.getElementById("lightboxCaption");
+
+  img.src = imagenUrl;
+  img.alt = titulo;
+  caption.textContent = titulo;
+
+  overlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function cerrarLightbox() {
+  const overlay = document.getElementById("lightboxModal");
+  overlay.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// Lightbox event listeners
+document.getElementById("lightboxBackdrop").addEventListener("click", cerrarLightbox);
+document.getElementById("lightboxClose").addEventListener("click", cerrarLightbox);
+
+// Close lightbox with Escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const lightbox = document.getElementById("lightboxModal");
+    if (lightbox.classList.contains("active")) {
+      cerrarLightbox();
+    } else {
+      closeQuiz();
+    }
+  }
+});
+
+// ===== VER MÁS BUTTON =====
+document.getElementById("btnVerMas").addEventListener("click", () => {
+  cargarTrabajos(false);
+});
+
+// ===== SMOOTH SCROLL FOR NAVBAR LINKS =====
+document.querySelectorAll('.navbar-links a[href^="#"]').forEach((anchor) => {
+  anchor.addEventListener("click", function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute("href"));
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+});
+
+// ===== NAVBAR SCROLL EFFECT =====
+let lastScroll = 0;
+window.addEventListener("scroll", () => {
+  const navbar = document.querySelector(".navbar");
+  const scrollY = window.scrollY;
+
+  if (scrollY > 100) {
+    navbar.classList.add("navbar-scrolled");
+  } else {
+    navbar.classList.remove("navbar-scrolled");
+  }
+
+  lastScroll = scrollY;
+});
+
 // ===== INIT =====
 renderStep();
+cargarTrabajos(true);
