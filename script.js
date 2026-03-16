@@ -270,7 +270,12 @@ function renderResults(cortes) {
     html += `
       <div class="result-card">
         <div class="result-img-wrapper">
-          <img src="${corte.imagen}" alt="${corte.nombre}">
+          <img 
+  src="${corte.imagen}" 
+  alt="${corte.nombre}"
+  onclick="abrirLightbox('${corte.imagen}', '${corte.nombre.replace(/'/g, "\\'")}')"
+  style="cursor: zoom-in;"
+>
           <span class="result-badge">${corte.genero}</span>
         </div>
         <div class="result-card-body">
