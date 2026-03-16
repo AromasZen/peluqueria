@@ -1315,3 +1315,12 @@ img {
 .hidden {
   display: none !important;
 }
+
+.result-img-wrapper img{
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
+}
+
+.result-img-wrapper img:hover{
+  transform: scale(1.05);
+}
