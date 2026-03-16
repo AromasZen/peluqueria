@@ -172,51 +172,84 @@ async function searchCortes() {
   `;
 
   try {
-    let query = supabaseClient.from("cortes").select("*");
 
-    if (selections.genero) query = query.eq("genero", selections.genero);
-    if (selections.tipo_cara) query = query.eq("tipo_cara", selections.tipo_cara);
-    if (selections.tipo_pelo) query = query.eq("tipo_pelo", selections.tipo_pelo);
-    if (selections.largo) query = query.eq("largo", selections.largo);
+    async function buscar(filtros) {
 
-    const { data, error } = await query;
+      let query = supabaseClient
+        .from("corte_caracteristicas")
+        .select(`
+          *,
+          cortes (*)
+        `);
 
-    if (error) {
-      console.error("Error:", error);
-      resultsInner.innerHTML = `
-        <div class="no-results">
-          <div class="icon">⚠️</div>
-          <h4>Error al buscar</h4>
-          <p>Hubo un problema al consultar los cortes. Intenta de nuevo.</p>
-          <button class="btn-primary small" onclick="resetQuiz()">Intentar de nuevo</button>
-        </div>
-      `;
-      return;
+      if (filtros.genero)
+        query = query.eq("genero", filtros.genero);
+
+      if (filtros.tipo_cara)
+        query = query.eq("tipo_cara", filtros.tipo_cara);
+
+      if (filtros.tipo_pelo)
+        query = query.eq("tipo_pelo", filtros.tipo_pelo);
+
+      if (filtros.largo)
+        query = query.eq("largo", filtros.largo);
+
+      const { data, error } = await query.limit(100);
+
+      if (error) {
+        console.error(error);
+        return [];
+      }
+
+      return data || [];
     }
 
-    if (!data || data.length === 0) {
+    // 1️⃣ Búsqueda exacta
+    let data = await buscar(selections);
+
+    // 2️⃣ fallback sin tipo_pelo
+    if (data.length === 0) {
+      data = await buscar({
+        genero: selections.genero,
+        tipo_cara: selections.tipo_cara,
+        largo: selections.largo
+      });
+    }
+
+    // 3️⃣ fallback sin largo
+    if (data.length === 0) {
+      data = await buscar({
+        genero: selections.genero,
+        tipo_cara: selections.tipo_cara
+      });
+    }
+
+    // 4️⃣ fallback solo genero
+    if (data.length === 0) {
+      data = await buscar({
+        genero: selections.genero
+      });
+    }
+
+    if (data.length === 0) {
       resultsInner.innerHTML = `
         <div class="no-results">
           <div class="icon">✂️</div>
           <h4>No encontramos coincidencias</h4>
-          <p>Intenta cambiar algunos filtros para encontrar más opciones de cortes.</p>
           <button class="btn-primary small" onclick="resetQuiz()">Intentar de nuevo</button>
         </div>
       `;
       return;
     }
 
-    renderResults(data);
+    const cortes = [...new Map(data.map(item =>
+      [item.cortes.id, item.cortes])
+    ).values()];
+
+    renderResults(cortes);
+
   } catch (err) {
-    console.error("Error:", err);
-    resultsInner.innerHTML = `
-      <div class="no-results">
-        <div class="icon">⚠️</div>
-        <h4>Error de conexión</h4>
-        <p>No se pudo conectar con la base de datos.</p>
-        <button class="btn-primary small" onclick="resetQuiz()">Intentar de nuevo</button>
-      </div>
-    `;
+    console.error(err);
   }
 }
 
@@ -237,11 +270,11 @@ function renderResults(cortes) {
     html += `
       <div class="result-card">
         <div class="result-img-wrapper">
-          <img src="${corte.imagen}" alt="${corte.nombre_corte}">
+          <img src="${corte.imagen}" alt="${corte.nombre}">
           <span class="result-badge">${corte.genero}</span>
         </div>
         <div class="result-card-body">
-          <h4>${corte.nombre_corte}</h4>
+          <h4>${corte.nombre}</h4>
           <p class="desc">${corte.descripcion || ""}</p>
           <div class="result-tags">
             <span class="result-tag">${corte.tipo_cara}</span>
