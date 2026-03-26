@@ -124,8 +124,7 @@ function renderStep() {
   quizOptions.innerHTML = step.options
     .map(
       (opt) =>
-        `<div class="quiz-option ${
-          selections[step.key] === opt.value ? "selected" : ""
+        `<div class="quiz-option ${selections[step.key] === opt.value ? "selected" : ""
         }" data-value="${opt.value}">
           <span class="emoji">${opt.emoji}</span>
           <span class="label">${opt.label}</span>
@@ -274,14 +273,14 @@ function renderResults(cortes) {
 
   cortes.forEach((corte) => {
     html += `
-      <div class="result-card">
-        <div class="result-img-wrapper">
-  src="${corte.imagen}" 
-  alt="${corte.nombre}"
-  onclick="abrirLightbox('${corte.imagen}', '${corte.nombre.replace(/'/g, "\\'")}')"
-  onerror="this.src='https://placehold.co/400x600/1a1a1a/d4a574?text=Corte'"
-  style="cursor: zoom-in;"
->
+      <div class="result-img-wrapper">
+  <img 
+    src="${corte.imagen}" 
+    alt="${corte.nombre}"
+    onclick="abrirLightbox('${corte.imagen}', '${corte.nombre.replace(/'/g, "\\'")}')"
+    onerror="this.src='https://placehold.co/400x600/1a1a1a/d4a574?text=Corte'"
+    style="cursor: zoom-in;"
+  >
           <span class="result-badge">${corte.genero}</span>
         </div>
         <div class="result-card-body">
@@ -342,9 +341,9 @@ async function cargarTrabajos(reset) {
     // First get total count
     if (reset) {
       const { count, error: countError } = await supabaseClient
-     .from("trabajos")
-     .select("*", { count: "exact", head: true })
-     .eq("empresa_id", empresaId);
+        .from("trabajos")
+        .select("*", { count: "exact", head: true })
+        .eq("empresa_id", empresaId);
 
       if (countError) {
         console.error("Error contando trabajos:", countError);
@@ -356,11 +355,11 @@ async function cargarTrabajos(reset) {
 
     // Fetch the next batch
     const { data, error } = await supabaseClient
-  .from("trabajos")
-  .select("*")
-  .eq("empresa_id", empresaId)
-  .order("created_at", { ascending: false })
-  .range(trabajosOffset, trabajosOffset + TRABAJOS_PER_PAGE - 1);
+      .from("trabajos")
+      .select("*")
+      .eq("empresa_id", empresaId)
+      .order("created_at", { ascending: false })
+      .range(trabajosOffset, trabajosOffset + TRABAJOS_PER_PAGE - 1);
 
     if (error) {
       console.error("Error cargando trabajos:", error);
@@ -438,10 +437,10 @@ function crearTarjetaTrabajo(trabajo, index) {
 
   const fecha = trabajo.created_at
     ? new Date(trabajo.created_at).toLocaleDateString("es-ES", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
     : "";
 
   card.innerHTML = `
@@ -685,15 +684,13 @@ function renderBookingStep() {
   bookingProgressBar.innerHTML = bookingSteps
     .map(
       (_, i) =>
-        `<div class="progress-step ${
-          i <= currentBookingStep ? "active" : ""
+        `<div class="progress-step ${i <= currentBookingStep ? "active" : ""
         }"></div>`
     )
     .join("");
 
-  bookingStepLabel.textContent = `📅 Paso ${currentBookingStep + 1} de ${
-    bookingSteps.length
-  }`;
+  bookingStepLabel.textContent = `📅 Paso ${currentBookingStep + 1} de ${bookingSteps.length
+    }`;
   bookingTitle.textContent = step.title;
   bookingSubtitle.textContent = step.subtitle;
 
@@ -710,9 +707,8 @@ function renderBookingStep() {
     bookingOptions.innerHTML = dynamicBarberos
       .map(
         (b) => `
-      <div class="booking-card ${
-          bookingSelections.hairdresser?.id === b.id ? "selected" : ""
-        }" data-id="${b.id}">
+      <div class="booking-card ${bookingSelections.hairdresser?.id === b.id ? "selected" : ""
+          }" data-id="${b.id}">
         <div class="barber-mini-img">
            <img src="${b.foto_url}" alt="${b.nombre}" onerror="this.src='https://placehold.co/100x100/1a1a1a/d4a574?text=${b.nombre.charAt(0)}'" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
         </div>
@@ -739,7 +735,7 @@ function renderBookingStep() {
     // Step 2: Date & Time
     customStepContent.classList.remove("hidden");
     const times = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
-    
+
     customStepContent.innerHTML = `
       <div class="datetime-picker">
         <div class="form-group">
@@ -807,7 +803,7 @@ function renderBookingStep() {
     customStepContent.classList.remove("hidden");
     const h = bookingSelections.hairdresser;
     const u = bookingSelections.user;
-    
+
     customStepContent.innerHTML = `
       <div class="booking-summary">
         <div class="summary-item">
@@ -876,7 +872,7 @@ function finishBooking() {
   const h = bookingSelections.hairdresser;
   const u = bookingSelections.user;
   const phone = "2914425849";
-  
+
   const message = `¡Hola Hustle Studio! Quisiera reservar un turno:
 - *Cliente:* ${u.nombre} ${u.apellido}
 - *Barbero:* ${h.nombre}
@@ -889,7 +885,7 @@ function finishBooking() {
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
-  
+
   // Open WhatsApp
   window.open(whatsappUrl, '_blank');
 
@@ -904,7 +900,7 @@ function finishBooking() {
       <button class="btn-ghost" onclick="closeBooking()" style="margin-top:20px; display:block; width:100%;">Cerrar</button>
     </div>
   `;
-  
+
   bookingPrevBtn.classList.add("hidden");
   bookingNextBtn.classList.add("hidden");
   bookingTitle.classList.add("hidden");
@@ -915,8 +911,8 @@ function finishBooking() {
 
 // Ensure the new buttons in Navbar/Hero work after init
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById("navBookingBtn")?.addEventListener("click", openBooking);
-    document.getElementById("heroBookingBtn")?.addEventListener("click", openBooking);
+  document.getElementById("navBookingBtn")?.addEventListener("click", openBooking);
+  document.getElementById("heroBookingBtn")?.addEventListener("click", openBooking);
 });
 
 renderStep();
