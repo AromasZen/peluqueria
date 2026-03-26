@@ -529,5 +529,320 @@ window.addEventListener("scroll", () => {
 });
 
 // ===== INIT =====
+// ===== APPOINTMENT BOOKING SYSTEM =====
+
+const hairdressers = [
+  { id: 1, name: "Enzo", price: 2500, duration: "30 min", emoji: "💈" },
+  { id: 2, name: "Franco", price: 2200, duration: "45 min", emoji: "✂️" },
+  { id: 3, name: "Sofi", price: 3000, duration: "60 min", emoji: "💇‍♀️" },
+];
+
+const bookingSteps = [
+  {
+    title: "Elegir Peluquero",
+    subtitle: "Selecciona el profesional que te atenderá",
+    key: "hairdresser",
+  },
+  {
+    title: "Fecha y Hora",
+    subtitle: "Elige cuándo quieres venir a Hustle Studio",
+    key: "datetime",
+  },
+  {
+    title: "Tus Datos",
+    subtitle: "Completa la información para confirmar la reserva",
+    key: "user",
+  },
+  {
+    title: "Resumen de Reserva",
+    subtitle: "Revisa los detalles antes de finalizar",
+    key: "summary",
+  },
+];
+
+let currentBookingStep = 0;
+let bookingSelections = {
+  hairdresser: null,
+  date: null,
+  time: null,
+  user: {
+    dni: "",
+    nombre: "",
+    apellido: "",
+    email: "",
+    telefono: "",
+  },
+};
+
+const bookingModal = document.getElementById("bookingModal");
+const bookingBackdrop = document.getElementById("bookingBackdrop");
+const bookingClose = document.getElementById("bookingClose");
+const bookingOptions = document.getElementById("bookingOptions");
+const customStepContent = document.getElementById("customStepContent");
+const bookingProgressBar = document.getElementById("bookingProgressBar");
+const bookingStepLabel = document.getElementById("bookingStepLabel");
+const bookingTitle = document.getElementById("bookingTitle");
+const bookingSubtitle = document.getElementById("bookingSubtitle");
+const bookingPrevBtn = document.getElementById("bookingPrevBtn");
+const bookingNextBtn = document.getElementById("bookingNextBtn");
+
+function openBooking() {
+  currentBookingStep = 0;
+  bookingSelections = {
+    hairdresser: null,
+    date: new Date().toISOString().split("T")[0],
+    time: null,
+    user: { dni: "", nombre: "", apellido: "", email: "", telefono: "" },
+  };
+  renderBookingStep();
+  bookingModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeBooking() {
+  bookingModal.classList.remove("active");
+  document.body.style.overflow = "auto";
+}
+
+bookingClose.addEventListener("click", closeBooking);
+bookingBackdrop.addEventListener("click", closeBooking);
+
+
+function renderBookingStep() {
+  const step = bookingSteps[currentBookingStep];
+  const isLast = currentBookingStep === bookingSteps.length - 1;
+
+  // Progress Bar
+  bookingProgressBar.innerHTML = bookingSteps
+    .map(
+      (_, i) =>
+        `<div class="progress-step ${
+          i <= currentBookingStep ? "active" : ""
+        }"></div>`
+    )
+    .join("");
+
+  bookingStepLabel.textContent = `📅 Paso ${currentBookingStep + 1} de ${
+    bookingSteps.length
+  }`;
+  bookingTitle.textContent = step.title;
+  bookingSubtitle.textContent = step.subtitle;
+
+  // Reset displays
+  bookingOptions.innerHTML = "";
+  bookingOptions.classList.add("hidden");
+  customStepContent.innerHTML = "";
+  customStepContent.classList.add("hidden");
+
+  if (currentBookingStep === 0) {
+    // Step 1: Hairdressers
+    bookingOptions.classList.remove("hidden");
+    bookingOptions.classList.add("hairdressers-grid");
+    bookingOptions.innerHTML = hairdressers
+      .map(
+        (h) => `
+      <div class="booking-card ${
+        bookingSelections.hairdresser?.id === h.id ? "selected" : ""
+      }" data-id="${h.id}">
+        <div class="emoji">${h.emoji}</div>
+        <div class="info">
+          <h4>${h.name}</h4>
+          <p>💰 $${h.price}</p>
+          <p>🕒 ${h.duration}</p>
+        </div>
+      </div>
+    `
+      )
+      .join("");
+
+    bookingOptions.querySelectorAll(".booking-card").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = parseInt(el.dataset.id);
+        bookingSelections.hairdresser = hairdressers.find((h) => h.id === id);
+        renderBookingStep();
+      });
+    });
+  } else if (currentBookingStep === 1) {
+    // Step 2: Date & Time
+    customStepContent.classList.remove("hidden");
+    const times = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+    
+    customStepContent.innerHTML = `
+      <div class="datetime-picker">
+        <div class="form-group">
+          <label class="form-label">Selecciona el día</label>
+          <input type="date" id="bookingDate" value="${bookingSelections.date}" class="form-input">
+        </div>
+        <label class="form-label">Horarios disponibles</label>
+        <div class="times-grid">
+          ${times.map(t => `
+            <div class="time-slot ${bookingSelections.time === t ? 'selected' : ''}" data-time="${t}">${t} hs</div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("bookingDate").addEventListener("change", (e) => {
+      bookingSelections.date = e.target.value;
+    });
+
+    customStepContent.querySelectorAll(".time-slot").forEach(el => {
+      el.addEventListener("click", () => {
+        bookingSelections.time = el.dataset.time;
+        renderBookingStep();
+      });
+    });
+  } else if (currentBookingStep === 2) {
+    // Step 3: User Info
+    customStepContent.classList.remove("hidden");
+    customStepContent.innerHTML = `
+      <div class="user-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input type="text" id="u-nombre" placeholder="Juan" class="form-input" required autocomplete="given-name" value="${bookingSelections.user.nombre}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido</label>
+            <input type="text" id="u-apellido" placeholder="Pérez" class="form-input" required autocomplete="family-name" value="${bookingSelections.user.apellido}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">DNI</label>
+          <input type="text" id="u-dni" placeholder="12.345.678" class="form-input" required value="${bookingSelections.user.dni}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" id="u-email" placeholder="email@ejemplo.com" class="form-input" required autocomplete="email" value="${bookingSelections.user.email}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input type="tel" id="u-tel" placeholder="291 123 4567" class="form-input" required autocomplete="tel" value="${bookingSelections.user.telefono}">
+        </div>
+      </div>
+    `;
+
+    // Add immediate listeners to save data as user types
+    ['nombre', 'apellido', 'dni', 'email', 'telefono'].forEach(field => {
+      document.getElementById(`u-${field}`).addEventListener('input', (e) => {
+        bookingSelections.user[field] = e.target.value;
+        updateBookingNextBtn();
+      });
+    });
+  } else if (currentBookingStep === 3) {
+    // Step 4: Summary
+    customStepContent.classList.remove("hidden");
+    const h = bookingSelections.hairdresser;
+    const u = bookingSelections.user;
+    
+    customStepContent.innerHTML = `
+      <div class="booking-summary">
+        <div class="summary-item">
+          <span class="label">Cliente:</span>
+          <span class="value">${u.nombre} ${u.apellido}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Servicio:</span>
+          <span class="value">${h.emoji} ${h.name}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Fecha y Hora:</span>
+          <span class="value">📅 ${bookingSelections.date} - ${bookingSelections.time} hs</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Total a pagar:</span>
+          <span class="value highlight">$${h.price}</span>
+        </div>
+        <div class="summary-notice">
+          <p>⚠️ Al confirmar, se abrirá WhatsApp para enviar la reserva.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  updateBookingNextBtn();
+
+  bookingPrevBtn.disabled = currentBookingStep === 0;
+  bookingPrevBtn.style.opacity = currentBookingStep === 0 ? "0.35" : "1";
+}
+
+function updateBookingNextBtn() {
+  const isLast = currentBookingStep === bookingSteps.length - 1;
+  let canProceed = false;
+
+  if (currentBookingStep === 0) canProceed = !!bookingSelections.hairdresser;
+  else if (currentBookingStep === 1) canProceed = !!bookingSelections.date && !!bookingSelections.time;
+  else if (currentBookingStep === 2) {
+    const u = bookingSelections.user;
+    canProceed = u.nombre.trim() && u.apellido.trim() && u.dni.trim() && u.email.trim() && u.telefono.trim();
+  }
+  else if (currentBookingStep === 3) canProceed = true;
+
+  bookingNextBtn.disabled = !canProceed;
+  bookingNextBtn.textContent = isLast ? "📱 Reservar por WhatsApp" : "Siguiente →";
+}
+
+bookingPrevBtn.addEventListener("click", () => {
+  if (currentBookingStep > 0) {
+    currentBookingStep--;
+    renderBookingStep();
+  }
+});
+
+bookingNextBtn.addEventListener("click", () => {
+  if (currentBookingStep < bookingSteps.length - 1) {
+    currentBookingStep++;
+    renderBookingStep();
+  } else {
+    finishBooking();
+  }
+});
+
+function finishBooking() {
+  const h = bookingSelections.hairdresser;
+  const u = bookingSelections.user;
+  const phone = "2914425849";
+  
+  const message = `¡Hola Hustle Studio! Quisiera reservar un turno:
+- *Cliente:* ${u.nombre} ${u.apellido}
+- *Servicio:* ${h.name}
+- *Fecha:* ${bookingSelections.date}
+- *Hora:* ${bookingSelections.time} hs
+- *Total:* $${h.price}
+- *DNI:* ${u.dni}
+- *Teléfono:* ${u.telefono}`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+  
+  // Open WhatsApp
+  window.open(whatsappUrl, '_blank');
+
+  // Show success state in modal
+  customStepContent.innerHTML = `
+    <div class="booking-success">
+      <div class="success-icon">✨</div>
+      <h3>¡Mensaje Preparado!</h3>
+      <p>Se ha abierto WhatsApp para enviar tu reserva.</p>
+      <p>Si el chat no se abrió automáticamente, haz clic abajo:</p>
+      <a href="${whatsappUrl}" target="_blank" class="btn-primary" style="margin-top:10px; text-decoration:none;">Abrir WhatsApp de nuevo</a>
+      <button class="btn-ghost" onclick="closeBooking()" style="margin-top:20px; display:block; width:100%;">Cerrar</button>
+    </div>
+  `;
+  
+  bookingPrevBtn.classList.add("hidden");
+  bookingNextBtn.classList.add("hidden");
+  bookingTitle.classList.add("hidden");
+  bookingSubtitle.classList.add("hidden");
+  bookingProgressBar.classList.add("hidden");
+  bookingStepLabel.classList.add("hidden");
+}
+
+// Ensure the new buttons in Navbar/Hero work after init
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById("navBookingBtn")?.addEventListener("click", openBooking);
+    document.getElementById("heroBookingBtn")?.addEventListener("click", openBooking);
+});
+
 renderStep();
 cargarTrabajos(true);
