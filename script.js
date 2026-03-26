@@ -276,10 +276,10 @@ function renderResults(cortes) {
     html += `
       <div class="result-card">
         <div class="result-img-wrapper">
-          <img 
   src="${corte.imagen}" 
   alt="${corte.nombre}"
   onclick="abrirLightbox('${corte.imagen}', '${corte.nombre.replace(/'/g, "\\'")}')"
+  onerror="this.src='https://placehold.co/400x600/1a1a1a/d4a574?text=Corte'"
   style="cursor: zoom-in;"
 >
           <span class="result-badge">${corte.genero}</span>
@@ -450,7 +450,7 @@ function crearTarjetaTrabajo(trabajo, index) {
         src="${trabajo.imagen_url || ""}"
         alt="${trabajo.titulo || "Trabajo"}"
         loading="lazy"
-        onerror="this.parentElement.classList.add('img-error'); this.style.display='none';"
+        onerror="this.src='https://placehold.co/600x600/1a1a1a/d4a574?text=Trabajo'"
       >
       <div class="trabajo-img-overlay">
         <span class="trabajo-zoom-icon">🔍</span>
@@ -586,7 +586,7 @@ function renderBarberosGrid() {
       (barber) => `
     <div class="barber-card animate__animated animate__fadeIn">
       <div class="barber-img">
-        <img src="${barber.foto_url}" alt="${barber.nombre}" onerror="this.src='assets/barbers/default.png'">
+        <img src="${barber.foto_url}" alt="${barber.nombre}" onerror="this.src='https://placehold.co/400x500/1a1a1a/d4a574?text=Barbero'">
         <div class="barber-overlay">
           <a href="${barber.instagram_url}" target="_blank" class="instagram-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
@@ -714,7 +714,7 @@ function renderBookingStep() {
           bookingSelections.hairdresser?.id === b.id ? "selected" : ""
         }" data-id="${b.id}">
         <div class="barber-mini-img">
-           <img src="${b.foto_url}" alt="${b.nombre}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+           <img src="${b.foto_url}" alt="${b.nombre}" onerror="this.src='https://placehold.co/100x100/1a1a1a/d4a574?text=${b.nombre.charAt(0)}'" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
         </div>
         <div class="info">
           <h4>${b.nombre}</h4>
