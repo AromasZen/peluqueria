@@ -93,11 +93,12 @@ function closeQuiz() {
   document.body.style.overflow = "";
 }
 
-document.getElementById("navQuizBtn").addEventListener("click", openQuiz);
-document.getElementById("heroQuizBtn").addEventListener("click", openQuiz);
-document.getElementById("ctaQuizBtn").addEventListener("click", openQuiz);
-modalBackdrop.addEventListener("click", closeQuiz);
-modalClose.addEventListener("click", closeQuiz);
+document.getElementById("navQuizBtn")?.addEventListener("click", openQuiz);
+document.getElementById("heroQuizBtn")?.addEventListener("click", openQuiz);
+document.getElementById("ctaQuizBtn")?.addEventListener("click", openQuiz);
+modalBackdrop?.addEventListener("click", closeQuiz);
+modalClose?.addEventListener("click", closeQuiz);
+
 
 // ===== RENDER STEP =====
 function renderStep() {
