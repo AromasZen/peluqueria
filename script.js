@@ -55,12 +55,17 @@ const steps = [
 let currentStep = 0;
 let selections = {};
 
+// ===== BARBEROS STATE =====
+let dynamicBarberos = [];
+let barberosLoading = false;
+
 // ===== TRABAJOS STATE =====
 const TRABAJOS_PER_PAGE = 5;
 let trabajosCargados = [];
 let trabajosTotalCount = 0;
 let trabajosOffset = 0;
 let trabajosLoading = false;
+
 
 // ===== DOM ELEMENTS =====
 const quizModal = document.getElementById("quizModal");
@@ -529,14 +534,77 @@ window.addEventListener("scroll", () => {
   lastScroll = scrollY;
 });
 
-// ===== INIT =====
+// ===== BARBEROS: LOAD FROM SUPABASE =====
+async function cargarBarberos() {
+  if (barberosLoading) return;
+  barberosLoading = true;
+
+  const gridEl = document.querySelector(".barbers-grid");
+  if (gridEl) {
+    gridEl.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Cargando equipo...</p>
+      </div>
+    `;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("barberos")
+      .select("*")
+      .eq("empresa_id", empresaId)
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("Error cargando barberos:", error);
+      if (gridEl) gridEl.innerHTML = "<p class='error'>Error al cargar el equipo.</p>";
+      return;
+    }
+
+    dynamicBarberos = data || [];
+    renderBarberosGrid();
+
+  } catch (err) {
+    console.error("Error:", err);
+  } finally {
+    barberosLoading = false;
+  }
+}
+
+function renderBarberosGrid() {
+  const gridEl = document.querySelector(".barbers-grid");
+  if (!gridEl) return;
+
+  if (dynamicBarberos.length === 0) {
+    gridEl.innerHTML = "<p>No hay barberos disponibles en este momento.</p>";
+    return;
+  }
+
+  gridEl.innerHTML = dynamicBarberos
+    .map(
+      (barber) => `
+    <div class="barber-card animate__animated animate__fadeIn">
+      <div class="barber-img">
+        <img src="${barber.foto_url}" alt="${barber.nombre}" onerror="this.src='assets/barbers/default.png'">
+        <div class="barber-overlay">
+          <a href="${barber.instagram_url}" target="_blank" class="instagram-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </a>
+        </div>
+      </div>
+      <div class="barber-info">
+        <h3>${barber.nombre}</h3>
+        <p>${barber.especialidad}</p>
+      </div>
+    </div>
+  `
+    )
+    .join("");
+}
+
 // ===== APPOINTMENT BOOKING SYSTEM =====
 
-const hairdressers = [
-  { id: 1, name: "Enzo", price: 2500, duration: "30 min", emoji: "💈" },
-  { id: 2, name: "Franco", price: 2200, duration: "45 min", emoji: "✂️" },
-  { id: 3, name: "Sofi", price: 3000, duration: "60 min", emoji: "💇‍♀️" },
-];
 
 const bookingSteps = [
   {
@@ -639,30 +707,34 @@ function renderBookingStep() {
     // Step 1: Hairdressers
     bookingOptions.classList.remove("hidden");
     bookingOptions.classList.add("hairdressers-grid");
-    bookingOptions.innerHTML = hairdressers
+    bookingOptions.innerHTML = dynamicBarberos
       .map(
-        (h) => `
+        (b) => `
       <div class="booking-card ${
-        bookingSelections.hairdresser?.id === h.id ? "selected" : ""
-      }" data-id="${h.id}">
-        <div class="emoji">${h.emoji}</div>
+          bookingSelections.hairdresser?.id === b.id ? "selected" : ""
+        }" data-id="${b.id}">
+        <div class="barber-mini-img">
+           <img src="${b.foto_url}" alt="${b.nombre}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+        </div>
         <div class="info">
-          <h4>${h.name}</h4>
-          <p>💰 $${h.price}</p>
-          <p>🕒 ${h.duration}</p>
+          <h4>${b.nombre}</h4>
+          <p>${b.especialidad}</p>
+          <p>💰 $${b.precio_base || 2500}</p>
         </div>
       </div>
     `
       )
       .join("");
 
+
     bookingOptions.querySelectorAll(".booking-card").forEach((el) => {
       el.addEventListener("click", () => {
         const id = parseInt(el.dataset.id);
-        bookingSelections.hairdresser = hairdressers.find((h) => h.id === id);
+        bookingSelections.hairdresser = dynamicBarberos.find((b) => b.id === id);
         renderBookingStep();
       });
     });
+
   } else if (currentBookingStep === 1) {
     // Step 2: Date & Time
     customStepContent.classList.remove("hidden");
@@ -744,7 +816,7 @@ function renderBookingStep() {
         </div>
         <div class="summary-item">
           <span class="label">Servicio:</span>
-          <span class="value">${h.emoji} ${h.name}</span>
+          <span class="value">${h.nombre}</span>
         </div>
         <div class="summary-item">
           <span class="label">Fecha y Hora:</span>
@@ -752,13 +824,14 @@ function renderBookingStep() {
         </div>
         <div class="summary-item">
           <span class="label">Total a pagar:</span>
-          <span class="value highlight">$${h.price}</span>
+          <span class="value highlight">$${h.precio_base || 2500}</span>
         </div>
         <div class="summary-notice">
           <p>⚠️ Al confirmar, se abrirá WhatsApp para enviar la reserva.</p>
         </div>
       </div>
     `;
+
   }
 
   updateBookingNextBtn();
@@ -806,12 +879,13 @@ function finishBooking() {
   
   const message = `¡Hola Hustle Studio! Quisiera reservar un turno:
 - *Cliente:* ${u.nombre} ${u.apellido}
-- *Servicio:* ${h.name}
+- *Barbero:* ${h.nombre}
 - *Fecha:* ${bookingSelections.date}
 - *Hora:* ${bookingSelections.time} hs
-- *Total:* $${h.price}
+- *Total:* $${h.precio_base || 2500}
 - *DNI:* ${u.dni}
 - *Teléfono:* ${u.telefono}`;
+
 
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
@@ -847,3 +921,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 renderStep();
 cargarTrabajos(true);
+cargarBarberos();
+
