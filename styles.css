@@ -314,7 +314,7 @@ img {
   display: flex;
   align-items: center;
   padding: 120px 24px 80px;
-  background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('assets/hero-bg.png');
+  background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('./assets/hero-bg.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
